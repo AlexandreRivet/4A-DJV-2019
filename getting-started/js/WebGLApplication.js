@@ -6,7 +6,7 @@ import {
 	PCFSoftShadowMap,
 	Vector2,
 }
-from '../libs/three.module.js';
+from '../libs/threejs/build/three.module.js';
 
 import {
 	isDefined

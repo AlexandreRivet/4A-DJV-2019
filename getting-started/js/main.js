@@ -21,7 +21,7 @@ import {
 	PointsMaterial,
 	Raycaster,
 }
-from '../libs/three.module.js';
+from '../libs/threejs/build/three.module.js';
 
 import {
 	isDefined
@@ -176,13 +176,4 @@ const mesh3 = new Points(customBuffer, material3);
 mesh3.position.y = 10;
 scene.add(mesh3);
 
-
-
-
-
-
-
-
-
-console.log(app);
 app.start();
