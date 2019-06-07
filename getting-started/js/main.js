@@ -20,7 +20,8 @@ import {
 	Points,
 	PointsMaterial,
 	Raycaster,
-	TextureLoader
+	TextureLoader,
+	AnimationMixer,
 }
 from '../libs/threejs/build/three.module.js';
 
@@ -35,6 +36,26 @@ import {
 from '../libs/threejs/examples/jsm/loaders/FBXLoader.js';
 
 import {
+	RenderPass
+}
+from '../libs/threejs/examples/jsm/postprocessing/RenderPass.js';
+
+import {
+	ShaderPass
+}
+from '../libs/threejs/examples/jsm/postprocessing/ShaderPass.js';
+
+import {
+	DotScreenShader
+}
+from '../libs/threejs/examples/jsm/shaders/DotScreenShader.js';
+
+import {
+	OrbitControls
+}
+from '../libs/threejs/examples/jsm/controls/OrbitControls.js';
+
+import {
 	isDefined
 }
 from './Utils.js';
@@ -44,6 +65,11 @@ import {
 	fshader,
 }
 from './Shaders.js';
+
+import {
+	ColorifyShader
+}
+from './ColorifyShader.js';
 
 const app = new WebGLApplication(
 	document.querySelector('#webgl'), ({
@@ -75,6 +101,15 @@ const app = new WebGLApplication(
 			});
 			geometry.verticesNeedUpdate = true;
 		}
+
+		// Update de l'animation du fbx
+		if (mixer) {
+			mixer.update(deltaTime);
+		}
+
+		// Update de la couleur de la pass
+		colorifyShaderPass.uniforms['uColor'].value.set(Math.random(), 0.0, 0.0);
+
 	}, {
 		mousemove: ({
 			mouse, scene, camera
@@ -103,11 +138,12 @@ const app = new WebGLApplication(
 				scene.add(mesh);
 			}
 		}
-	}
+	},
+	true
 );
 
 const {
-	scene, camera
+	scene, camera, renderer,
 } = app;
 
 // Ajout du cube
@@ -160,10 +196,12 @@ light2.shadow.camera.far = 100;
 light2.shadow.bias = 0.001;
 scene.add(light2);
 
-camera.position.z = 50;
-camera.position.y = 50;
-camera.position.x = 10;
-camera.lookAt(0, 0, 0);
+camera.position.z = 25;
+camera.position.y = 25;
+camera.position.x = 5;
+const controls = new OrbitControls(camera, renderer.domElement);
+
+
 
 const vertices = [
 	0, 0, 0,
@@ -214,21 +252,33 @@ objLoader.load(
 
 
 // Load d'un FBX
+let mixer = null;
 const fbxLoader = new FBXLoader();
 fbxLoader.load('models/fbx/Samba dancing.fbx', (object) => {
 	scene.add(object);
-	object.scale.set(0.01, 0.01, 0.01);
+	object.scale.set(0.05, 0.05, 0.05);
+
+	mixer = new AnimationMixer(object);
+	const action = mixer.clipAction(object.animations[0]);
+	action.play();
+
+	console.log(object);
 });
 
 
 
+// Setup des pass pour le postprocessing
+app.addPass(new RenderPass(scene, camera));
+app.addPass(new ShaderPass(DotScreenShader));
+const colorifyShaderPass = new ShaderPass(ColorifyShader);
+colorifyShaderPass.uniforms['uColor'].value.set(0.5, 0.0, 0.0);
+app.addPass(colorifyShaderPass);
 
 
 
 
 
 
-var a = 0;
 
 
 app.start();

@@ -9,12 +9,17 @@ import {
 from '../libs/threejs/build/three.module.js';
 
 import {
+	EffectComposer
+}
+from '../libs/threejs/examples/jsm/postprocessing/EffectComposer.js';
+
+import {
 	isDefined
 }
 from './Utils.js';
 
 class WebGLApplication {
-	constructor(containerElement, update, events = {}) {
+	constructor(containerElement, update, events = {}, usePostprocessing = false) {
 		const {
 			clientWidth, clientHeight
 		} = containerElement;
@@ -49,6 +54,25 @@ class WebGLApplication {
 		this._clock = new Clock();
 
 		this._events = events;
+
+		// Manage postprocessing
+		if (usePostprocessing) {
+			this._composer = new EffectComposer(this._renderer);
+		}
+
+	}
+
+	get composer() {
+		return this._composer;
+	}
+
+	get renderer() {
+		return this._renderer;
+	}
+
+	addPass(pass) {
+		if (!this._composer) return;
+		this._composer.addPass(pass);
 	}
 
 	get scene() {
@@ -88,8 +112,13 @@ class WebGLApplication {
 			this._update(this, deltaTime, elapsedTime);
 		}
 
-		// rendu d'une frame
-		this._renderer.render(this._scene, this._camera);
+		// rendu d'une frame par le composer ou le renderer classique
+		if (this._composer) {
+			this._composer.render();
+		} else {
+			this._renderer.render(this._scene, this._camera);
+		}
+
 
 		// rappel de la fonction au prochain 'repaint' du navigateur
 		this._rafID = requestAnimationFrame(() => {
@@ -105,9 +134,14 @@ class WebGLApplication {
 		if (this._storedWidth !== clientWidth || this._storedHeight !== clientHeight) {
 			this._storedWidth = clientWidth;
 			this._storedHeight = clientHeight;
-			// mis à jour du buffer de rendu
+
+			// mise à jour du buffer de rendu
 			this._renderer.setSize(clientWidth, clientHeight);
-			// mis à jour de la caméra
+			if (this._composer) {
+				this._composer.setSize(clientWidth, clientHeight);
+			}
+
+			// mise à jour de la caméra
 			this._camera.aspect = clientWidth / clientHeight;
 			this._camera.updateProjectionMatrix();
 		}
