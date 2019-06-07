@@ -24,6 +24,11 @@ import {
 from '../libs/threejs/build/three.module.js';
 
 import {
+	OBJLoader
+}
+from '../libs/threejs/examples/jsm/loaders/OBJLoader.js';
+
+import {
 	isDefined
 }
 from './Utils.js';
@@ -175,5 +180,25 @@ const material3 = new PointsMaterial({
 const mesh3 = new Points(customBuffer, material3);
 mesh3.position.y = 10;
 scene.add(mesh3);
+
+
+// Load d'un obj
+const objLoader = new OBJLoader();
+objLoader.load(
+	'models/obj/ninja/ninjaHead_Low.obj', (object) => {
+		console.log(obj);
+	},
+	xhr => {
+		console.log(xhr);
+	}
+);
+
+
+
+
+
+
+
+
 
 app.start();
