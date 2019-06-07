@@ -20,6 +20,7 @@ import {
 	Points,
 	PointsMaterial,
 	Raycaster,
+	TextureLoader
 }
 from '../libs/threejs/build/three.module.js';
 
@@ -27,6 +28,11 @@ import {
 	OBJLoader
 }
 from '../libs/threejs/examples/jsm/loaders/OBJLoader.js';
+
+import {
+	FBXLoader
+}
+from '../libs/threejs/examples/jsm/loaders/FBXLoader.js';
 
 import {
 	isDefined
@@ -110,7 +116,7 @@ const material = new MeshNormalMaterial();
 const mesh = new Mesh(geometry, material);
 mesh.name = 'cube-001';
 mesh.castShadow = true;
-scene.add(mesh);
+// scene.add(mesh);
 
 // Ajout du plan
 const geometry2 = new PlaneGeometry(30, 30, 50, 50);
@@ -154,9 +160,9 @@ light2.shadow.camera.far = 100;
 light2.shadow.bias = 0.001;
 scene.add(light2);
 
-camera.position.z = 20;
-camera.position.y = 20;
-camera.position.x = 5;
+camera.position.z = 50;
+camera.position.y = 50;
+camera.position.x = 10;
 camera.lookAt(0, 0, 0);
 
 const vertices = [
@@ -182,11 +188,23 @@ mesh3.position.y = 10;
 scene.add(mesh3);
 
 
+const textureLoader = new TextureLoader();
+
 // Load d'un obj
 const objLoader = new OBJLoader();
 objLoader.load(
 	'models/obj/ninja/ninjaHead_Low.obj', (object) => {
-		console.log(obj);
+		const aoMap = textureLoader.load('models/obj/ninja/ao.jpg');
+		const displacementMap = textureLoader.load('models/obj/ninja/displacement.jpg');
+		const normalMap = textureLoader.load('models/obj/ninja/normal.jpg');
+
+		scene.add(object);
+		object.scale.set(0.05, 0.05, 0.05);
+		object.position.z = 5;
+
+		object.children[0].material.aoMap = aoMap;
+		object.children[0].material.displacementMap = displacementMap;
+		object.children[0].material.normalMap = normalMap;
 	},
 	xhr => {
 		console.log(xhr);
@@ -195,10 +213,22 @@ objLoader.load(
 
 
 
+// Load d'un FBX
+const fbxLoader = new FBXLoader();
+fbxLoader.load('models/fbx/Samba dancing.fbx', (object) => {
+	scene.add(object);
+	object.scale.set(0.01, 0.01, 0.01);
+});
 
 
 
 
+
+
+
+
+
+var a = 0;
 
 
 app.start();
