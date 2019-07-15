@@ -14,12 +14,23 @@ import {
 from '../libs/threejs/examples/jsm/postprocessing/EffectComposer.js';
 
 import {
+	StereoEffect
+}
+from '../libs/threejs/examples/jsm/effects/StereoEffect.js';
+
+import {
 	isDefined
 }
 from './Utils.js';
 
+const RenderMode = {
+	CLASSIC: 0,
+	POSTPROCESSED: 1,
+	VR: 2
+};
+
 class WebGLApplication {
-	constructor(containerElement, update, events = {}, usePostprocessing = false) {
+	constructor(containerElement, update, events = {}, renderMode = RenderMode.CLASSIC) {
 		const {
 			clientWidth, clientHeight
 		} = containerElement;
@@ -39,11 +50,12 @@ class WebGLApplication {
 		this._renderer = new WebGLRenderer({
 			antialias: true,
 		});
-		this._renderer.setSize(clientWidth, clientHeight);
+		this._renderer.setSize(clientWidth, clientHeight, false);
 
 		// Active les ombres
 		this._renderer.shadowMap.enabled = true;
 		this._renderer.shadowMap.type = PCFSoftShadowMap;
+		this._renderer.setClearColor(0xcccccc);
 
 		// Ajoute le canvas dans le container et ajoute les évenements user
 		containerElement.appendChild(this._renderer.domElement);
@@ -55,11 +67,19 @@ class WebGLApplication {
 
 		this._events = events;
 
-		// Manage postprocessing
-		if (usePostprocessing) {
-			this._composer = new EffectComposer(this._renderer);
+		this._renderMode = renderMode;
+		switch (this._renderMode) {
+		case RenderMode.POSTPROCESSED:
+			{
+				this._composer = new EffectComposer(this._renderer);
+				break;
+			}
+		case RenderMode.VR:
+			{
+				this._effect = new StereoEffect(this._renderer);
+				break;
+			}
 		}
-
 	}
 
 	get composer() {
@@ -112,13 +132,24 @@ class WebGLApplication {
 			this._update(this, deltaTime, elapsedTime);
 		}
 
-		// rendu d'une frame par le composer ou le renderer classique
-		if (this._composer) {
-			this._composer.render();
-		} else {
-			this._renderer.render(this._scene, this._camera);
+		// rendu d'une frame en fonction du mode de rendu
+		switch (this._renderMode) {
+		case RenderMode.CLASSIC:
+			{
+				this._renderer.render(this._scene, this._camera);
+				break;
+			}
+		case RenderMode.POSTPROCESSED:
+			{
+				this._composer.render();
+				break;
+			}
+		case RenderMode.VR:
+			{
+				this._effect.render(this._scene, this._camera);
+				break;
+			}
 		}
-
 
 		// rappel de la fonction au prochain 'repaint' du navigateur
 		this._rafID = requestAnimationFrame(() => {
@@ -136,7 +167,7 @@ class WebGLApplication {
 			this._storedHeight = clientHeight;
 
 			// mise à jour du buffer de rendu
-			this._renderer.setSize(clientWidth, clientHeight);
+			this._renderer.setSize(clientWidth, clientHeight, false);
 			if (this._composer) {
 				this._composer.setSize(clientWidth, clientHeight);
 			}
@@ -196,4 +227,7 @@ class WebGLApplication {
 
 }
 
-export default WebGLApplication;
+export {
+	WebGLApplication,
+	RenderMode
+};

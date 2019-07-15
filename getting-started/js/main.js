@@ -1,4 +1,7 @@
-import WebGLApplication from './WebGLApplication.js';
+import {
+	WebGLApplication, RenderMode
+}
+from './WebGLApplication.js';
 
 import {
 	BoxGeometry,
@@ -56,6 +59,11 @@ import {
 from '../libs/threejs/examples/jsm/controls/OrbitControls.js';
 
 import {
+	DeviceOrientationControls
+}
+from '../libs/threejs/examples/jsm/controls/DeviceOrientationControls.js';
+
+import {
 	isDefined
 }
 from './Utils.js';
@@ -107,6 +115,10 @@ const app = new WebGLApplication(
 			mixer.update(deltaTime);
 		}
 
+		if (controls) {
+			controls.update();
+		}
+
 		// Update de la couleur de la pass
 		colorifyShaderPass.uniforms['uColor'].value.set(Math.random(), 0.0, 0.0);
 
@@ -139,7 +151,7 @@ const app = new WebGLApplication(
 			}
 		}
 	},
-	true
+	RenderMode.VR
 );
 
 const {
@@ -199,7 +211,8 @@ scene.add(light2);
 camera.position.z = 25;
 camera.position.y = 25;
 camera.position.x = 5;
-const controls = new OrbitControls(camera, renderer.domElement);
+// const controls = new OrbitControls(camera, renderer.domElement);
+const controls = new DeviceOrientationControls(camera);
 
 
 
@@ -224,7 +237,6 @@ const material3 = new PointsMaterial({
 const mesh3 = new Points(customBuffer, material3);
 mesh3.position.y = 10;
 scene.add(mesh3);
-
 
 const textureLoader = new TextureLoader();
 
@@ -274,11 +286,23 @@ const colorifyShaderPass = new ShaderPass(ColorifyShader);
 colorifyShaderPass.uniforms['uColor'].value.set(0.5, 0.0, 0.0);
 app.addPass(colorifyShaderPass);
 
+var elem = document.documentElement;
 
+document.querySelector('#webgl').addEventListener('click', () => {
+	openFullscreen();
+});
 
-
-
-
-
+/* View in fullscreen */
+function openFullscreen() {
+	if (elem.requestFullscreen) {
+		elem.requestFullscreen();
+	} else if (elem.mozRequestFullScreen) { /* Firefox */
+		elem.mozRequestFullScreen();
+	} else if (elem.webkitRequestFullscreen) { /* Chrome, Safari and Opera */
+		elem.webkitRequestFullscreen();
+	} else if (elem.msRequestFullscreen) { /* IE/Edge */
+		elem.msRequestFullscreen();
+	}
+}
 
 app.start();
